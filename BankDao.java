@@ -11,11 +11,13 @@ public interface BankDao {
 
     void addAccount(Account account) throws SQLException;
 
-    void getAccounts(int custId) throws SQLException;
+    List<Account> getAccounts(int custId) throws SQLException;
 
-    void depositMoney(Account account, double amount);
+    void personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException;
 
     void transferMoney(Account account, double amount);
+
+    List<Account> allAccounts(int custId) throws SQLException;
 
     void addEmployee(Employee employee);
 

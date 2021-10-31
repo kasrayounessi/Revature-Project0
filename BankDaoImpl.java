@@ -80,18 +80,72 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
-    public void getAccounts(int custId) throws SQLException {
+    public List<Account> getAccounts(int custId) throws SQLException {
         List<Account> accounts = new ArrayList<>();
         String query = "select * from account WHERE customer_id = "+custId;
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(query);
-        int i = 1;
         while(resultSet.next()){
-            System.out.println("Account "+i+": $"+resultSet.getDouble(2));
-            i++;
+            accounts.add(new Account(custId, resultSet.getDouble(2)));
+        }
+        return accounts;
 
+    }
+
+    @Override
+    public void personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException {
+
+
+        String query = "update account set balance = ? WHERE (id = ?)";
+        System.out.println("Account ID: " + actIdx);
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        if(deposit) {
+            preparedStatement.setDouble(1, account.getBalance() + amount);
+            preparedStatement.setInt(2, actIdx);
+            System.out.println("Amount deposited successfully");
+        }
+
+        else {
+            if(account.getBalance() >= amount) {
+                preparedStatement.setDouble(1, account.getBalance() - amount);
+                preparedStatement.setInt(2, actIdx);
+                System.out.println("Amount withdrawn successfully");
+            }
+            else{
+                System.out.println("Not enough funds!");
+                return;
+            }
 
         }
+        int count = preparedStatement.executeUpdate();
+        if(count > 0){
+            System.out.println("Updated successfully!");
+        } else{
+            System.out.println("Oops, something went wrong. please try again!");
+        }
+    }
+
+
+    @Override
+    public void transferMoney(Account account, double amount) {
+
+
+
+    }
+
+    @Override
+    public List<Account> allAccounts(int custId) throws SQLException {
+        List<Account> accounts = new ArrayList<>();
+        String query = "select * from account where customer_id = "+ custId;
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+        while(resultSet.next()){
+            System.out.println("Account ID: " + resultSet.getInt(1));
+            Account account = new Account(custId, resultSet.getDouble(2));
+            account.setActId(resultSet.getInt(1));
+            accounts.add(account);
+        }
+        return accounts;
 
     }
 

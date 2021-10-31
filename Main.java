@@ -13,6 +13,7 @@ public class Main {
         System.out.println("Welcome.");
         System.out.println("ENTER 1 if you are an employee");
         System.out.println("ENTER 2 if you are a customer");
+        System.out.println("*********************************");
         String universalInd = scanner.next();
 
         switch(universalInd){
@@ -83,8 +84,7 @@ public class Main {
                     System.out.println("Choose an option!");
                     System.out.println("Enter 1 to create a new account");
                     System.out.println("Enter 2 to view balances of your accounts");
-                    System.out.println("Enter 3 to withdraw money");
-                    System.out.println("Enter 4 to deposit money");
+                    System.out.println("Enter 3 to deposit/withdraw money");
                     System.out.println("Enter 5 to transfer money");
                     System.out.println("Enter 6 to receive money");
                     System.out.println("Enter 7 to exit");
@@ -99,13 +99,53 @@ public class Main {
                             dao.addAccount(account);
                             break;
                         case "2":
-                            dao.getAccounts(customerId);
+                            List<Account> accounts = dao.getAccounts(customerId);
+                            int y = 1;
+                            for(Account a:accounts){
+                                System.out.println("Account " + y + ": $"+a.getBalance());
+                                y++;
+                            }
                             break;
                         case "3":
-                            System.out.println("withdrawing money ...");
-                            break;
-                        case "4":
-                            System.out.println("depositing money...");
+                            List<Account> accountsAvailable = dao.getAccounts(customerId);
+                            int z = 1;
+                            System.out.println("Choose one of the two.");
+                            System.out.println("Enter 1 to deposit");
+                            System.out.println("Enter 2 to withdraw");
+                            System.out.println("Enter any other button to exit");
+                            String depWitInd = scanner.next();
+                            boolean deposit = false;
+                            switch(depWitInd){
+                                case "1":
+                                    deposit = true;
+                                    break;
+                                case "2":
+                                    deposit = false;
+                                    break;
+                                default:
+                                    System.out.println("Exiting...");
+                                    return;
+
+
+                            }
+                            for(Account a:accountsAvailable){
+                                System.out.println("Account "+z+": "+a.getBalance());
+                                z++;
+                            }
+
+                            //int firstRecord = dao.getFirstRecordIndex(customerId);
+                            List<Account> allAccounts = dao.allAccounts(customerId);
+                            System.out.print("Enter the number of your account: ");
+                            int idx = scanner.nextInt()-1;
+                            Account desiredAccount = allAccounts.get(idx);
+                            int accountIdx = desiredAccount.getActId();
+                            //int accountIdx = firstRecord + incrementer;
+
+                            System.out.print("Enter the amount: ");
+                            double amountChosen = scanner.nextDouble();
+                            System.out.println("Final Account ID: " + accountIdx);
+                            dao.personalActions(accountsAvailable.get(idx), amountChosen, deposit, accountIdx);
+
                             break;
                         case "5":
                             System.out.println("Transferring money...");
