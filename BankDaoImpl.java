@@ -1,7 +1,5 @@
 package com.company;
 
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +16,9 @@ public class BankDaoImpl implements BankDao{
     public List<String> viewCustomer(String userName) throws SQLException {
         List<String> customerInfo = new ArrayList<>();
         String query = "select * from customer WHERE username = '" + userName + "'";
-
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
-
         if(resultSet != null){
             customerInfo.add(Integer.toString(resultSet.getInt(1)));
             customerInfo.add(resultSet.getString(2));
@@ -33,12 +29,10 @@ public class BankDaoImpl implements BankDao{
             System.out.println("No record found");
         }
         return customerInfo;
-
-
     }
 
     @Override
-    public int addCustomer(Customer customer) throws SQLException {
+    public void addCustomer(Customer customer) throws SQLException {
         String sql = "insert into customer (first_name, last_name, username, password) values (?,?,?,?)";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setString(1, customer.getFirstName());
@@ -46,22 +40,10 @@ public class BankDaoImpl implements BankDao{
         preparedStatement.setString(3, customer.getUserName());
         preparedStatement.setString(4, customer.getPassword());
         int count = preparedStatement.executeUpdate();
-        if(count>0)
-            System.out.println("Welcome dear "+customer.getFirstName() + " " + customer.getLastName());
-            Statement statement = connection.createStatement();
-            String query = "select id from customer WHERE first_name = '" + customer.getFirstName() + "' AND last_name = '" + customer.getLastName() + "'";
-            ResultSet resultSet = statement.executeQuery(query);
-            resultSet.next();
-            if(resultSet != null) {
-                System.out.println("Your ID: " + resultSet.getInt(1));
-                return resultSet.getInt(1);
-            }
-        else {
-                System.out.println("Oops, something went wrong!");
-                return 0;
-            }
-
-
+        if (count > 0)
+            System.out.println("Welcome dear " + customer.getFirstName() + " " + customer.getLastName());
+        else
+            System.out.println("Oops, something went wrong!");
     }
 
     @Override
@@ -78,7 +60,7 @@ public class BankDaoImpl implements BankDao{
             System.out.println("Oops, something went wrong.");
 
     }
-
+/*
     @Override
     public List<Account> getAccounts(int custId) throws SQLException {
         List<Account> accounts = new ArrayList<>();
@@ -91,18 +73,25 @@ public class BankDaoImpl implements BankDao{
         return accounts;
 
     }
-
+*/
     @Override
     public void personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException {
 
 
         String query = "update account set balance = ? WHERE (id = ?)";
-        System.out.println("Account ID: " + actIdx);
+        //System.out.println("Account ID: " + actIdx);
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         if(deposit) {
             preparedStatement.setDouble(1, account.getBalance() + amount);
             preparedStatement.setInt(2, actIdx);
             System.out.println("Amount deposited successfully");
+            int count = preparedStatement.executeUpdate();
+            if(count > 0){
+                System.out.println("Updated successfully!");
+            } else{
+                System.out.println("Oops, something went wrong. please try again!");
+            }
+            //return -1;
         }
 
         else {
@@ -110,24 +99,28 @@ public class BankDaoImpl implements BankDao{
                 preparedStatement.setDouble(1, account.getBalance() - amount);
                 preparedStatement.setInt(2, actIdx);
                 System.out.println("Amount withdrawn successfully");
+                int count = preparedStatement.executeUpdate();
+                if(count > 0){
+                    System.out.println("Updated successfully!");
+                } else{
+                    System.out.println("Oops, something went wrong. please try again!");
+                }
+                //return amount;
             }
             else{
                 System.out.println("Not enough funds!");
-                return;
+                //return -2;
             }
 
         }
-        int count = preparedStatement.executeUpdate();
-        if(count > 0){
-            System.out.println("Updated successfully!");
-        } else{
-            System.out.println("Oops, something went wrong. please try again!");
-        }
+
     }
 
 
     @Override
-    public void transferMoney(Account account, double amount) {
+    public void transferMoney(Account accountFrom, Account accountTo, double amount) {
+        String query = "";
+
 
 
 
@@ -140,7 +133,7 @@ public class BankDaoImpl implements BankDao{
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(query);
         while(resultSet.next()){
-            System.out.println("Account ID: " + resultSet.getInt(1));
+            //System.out.println("Account ID: " + resultSet.getInt(1));
             Account account = new Account(custId, resultSet.getDouble(2));
             account.setActId(resultSet.getInt(1));
             accounts.add(account);
@@ -149,10 +142,7 @@ public class BankDaoImpl implements BankDao{
 
     }
 
-    @Override
-    public void addEmployee(Employee employee) {
 
-    }
 
     @Override
     public void deleteAccount(int actID) {
