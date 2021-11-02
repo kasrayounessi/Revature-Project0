@@ -60,20 +60,7 @@ public class BankDaoImpl implements BankDao{
             System.out.println("Oops, something went wrong.");
 
     }
-/*
-    @Override
-    public List<Account> getAccounts(int custId) throws SQLException {
-        List<Account> accounts = new ArrayList<>();
-        String query = "select * from account WHERE customer_id = "+custId;
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-        while(resultSet.next()){
-            accounts.add(new Account(custId, resultSet.getDouble(2)));
-        }
-        return accounts;
 
-    }
-*/
     @Override
     public void personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException {
 
@@ -116,20 +103,10 @@ public class BankDaoImpl implements BankDao{
 
     }
 
-
-    @Override
-    public void transferMoney(Account accountFrom, Account accountTo, double amount) {
-        String query = "";
-
-
-
-
-    }
-
     @Override
     public List<Account> allAccounts(int custId) throws SQLException {
         List<Account> accounts = new ArrayList<>();
-        String query = "select * from account where customer_id = "+ custId;
+        String query = "select * from account where customer_id = "+ custId + " and verified = true";
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(query);
         while(resultSet.next()){
@@ -145,7 +122,71 @@ public class BankDaoImpl implements BankDao{
 
 
     @Override
-    public void deleteAccount(int actID) {
+    public void deleteAccount(int actId) throws SQLException {
+        String query = "delete from account where id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setInt(1, actId);
+        int count = preparedStatement.executeUpdate();
+        if(count>0)
+            System.out.println("Account " + actId + " successfully deleted");
+        else
+            System.out.println("Oops, something went wrong");
+
+    }
+
+    @Override
+    public List<Account> getUnverifiedAccounts() throws SQLException {
+        List<Account> unverifiedAccounts = new ArrayList<>();
+        String query = "select * from account where verified = "+false;
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+        while(resultSet.next()){
+            Account account = new Account(resultSet.getInt(3), resultSet.getDouble(2));
+            account.setActId(resultSet.getInt(1));
+            unverifiedAccounts.add(account);
+        }
+
+        return unverifiedAccounts;
+    }
+
+    @Override
+    public void verifyAccount(int actId) throws SQLException {
+        String query = "update account set verified = true where id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setInt(1, actId);
+        int count = preparedStatement.executeUpdate();
+        if(count > 0)
+            System.out.println("Account " + actId + " verified!");
+        else
+            System.out.println("Oops, something went wrong!");
+
+    }
+
+    @Override
+    public void insertTransaction(int actIdFrom, int actIdTo, double balance) throws SQLException {
+        String query = "insert into transaction (account_from, account_to, balance) values (?,?,?);";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setInt(1,actIdFrom);
+        preparedStatement.setInt(2, actIdTo);
+        preparedStatement.setDouble(3, balance);
+        int count = preparedStatement.executeUpdate();
+        if(count>0)
+            System.out.println("Transaction inserted");
+        else
+            System.out.println("Oops,something went wrong");
+
+    }
+
+    @Override
+    public void showTransActions() throws SQLException {
+        String query = "select * from transaction";
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+        int i = 1;
+        while(resultSet.next()){
+            System.out.println("Transaction "+i+": $"+resultSet.getDouble(3)+" transferred from account "+resultSet.getInt(1)+ " to account "+resultSet.getInt(2));
+            i++;
+        }
 
     }
 }

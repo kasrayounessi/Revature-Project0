@@ -10,17 +10,17 @@ public interface BankDao {
 
     void addAccount(Account account) throws SQLException;
 
-    //List<Account> getAccounts(int custId) throws SQLException;
-
     void personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException;
-
-    void transferMoney(Account accountFrom, Account accountTo, double amount);
 
     List<Account> allAccounts(int custId) throws SQLException;
 
+    void deleteAccount(int actID) throws SQLException;
 
+    List<Account> getUnverifiedAccounts() throws SQLException;
 
-    //void addEmployee(Employee employee);
+    void verifyAccount(int actId) throws SQLException;
 
-    void deleteAccount(int actID);
+    void insertTransaction(int actIdFrom, int actIdTo, double balance) throws SQLException;
+
+    void showTransActions() throws SQLException;
 }

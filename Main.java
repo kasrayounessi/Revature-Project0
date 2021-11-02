@@ -34,7 +34,60 @@ public class Main {
                 boolean employeeFlag = true;
                 while(employeeFlag) {
                     for(int i = 1; i <= STAR_COUNTER; i++) System.out.print("*");
+                    System.out.println();
                     System.out.println("Choose an option!");
+                    System.out.println("Enter 1 to approve/reject new accounts");
+                    System.out.println("Enter 2 to view a customer's bank accounts");
+                    System.out.println("Enter 3 to view transactions");
+                    System.out.println("Enter 4 to exit");
+                    String employeeInd = scanner.next();
+
+                    switch(employeeInd){
+                        case "1":
+                            List<Account> unverifiedAccounts = dao.getUnverifiedAccounts();
+                            for(Account e:unverifiedAccounts){
+                                System.out.println("Account" + e.getActId() + ", balance: " + e.getBalance());
+                            }
+                            int verificationActId = scanner.nextInt();
+                            Account unverifiedAccount = unverifiedAccounts.get(verificationActId-1);
+                            System.out.println("Enter 1 to approve");
+                            System.out.println("Enter 2 to reject");
+                            System.out.println("Enter any other button to return to the main menu");
+                            String appRejInd = scanner.next();
+
+                            switch(appRejInd){
+                                case "1":
+                                    dao.verifyAccount(unverifiedAccount.getActId());
+                                    break;
+                                case "2":
+                                    dao.deleteAccount(unverifiedAccount.getActId());
+                                    break;
+                                default:
+                                    System.out.println("returning to main menu...");
+                                    break;
+
+                            }
+                            break;
+                        case "2":
+                            System.out.print("Enter the customer ID: ");
+                            int customerIdView = scanner.nextInt();
+                            List<Account> accountsToView = dao.allAccounts(customerIdView);
+                            for(Account f:accountsToView){
+                                System.out.println("Account " + f.getActId() + ", balance : "+f.getBalance());
+                            }
+                            System.out.println("Press any button to return to main menu");
+                            String leaveButton = scanner.next();
+                            break;
+                        case "3":
+                            System.out.println("not implemented yet!");
+                        case "4":
+                            System.out.println("Exiting ...");
+                            employeeFlag = false;
+                            break;
+                        default:
+                            System.out.println("Please enter a valid number!");
+
+                    }
                 }
                 break;
             case "2":
@@ -181,6 +234,7 @@ public class Main {
                             int w = 1;
                             for(Account d:myAccount){
                                 System.out.println("Account "+w+", balance: $"+d.getBalance());
+                                w++;
                             }
                             int myAccountIdx = scanner.nextInt();
                             Account accountFrom = myAccount.get(myAccountIdx-1);
