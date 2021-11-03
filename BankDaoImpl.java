@@ -13,6 +13,7 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
+    // this method receives the username, checks the database for such username, and then returns the customer info as a list
     public List<String> viewCustomer(String userName) throws SQLException {
         List<String> customerInfo = new ArrayList<>();
         String query = "select * from customer WHERE username = '" + userName + "'";
@@ -32,6 +33,7 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
+    // this method adds customers by receiving a customer object that provides first and last name, username, and password
     public void addCustomer(Customer customer) throws SQLException {
         String sql = "insert into customer (first_name, last_name, username, password) values (?,?,?,?)";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -47,9 +49,22 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
+    // quicker way to check for a customer
+    public boolean isExistingCustomer(String username) throws SQLException {
+        String query = "select * from customer where username = '"+ username+"'";
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+        if(resultSet.next())
+            return true;
+        else
+            return false;
+    }
+
+    @Override
+    //Adds accounts to the account table
     public void addAccount(Account account) throws SQLException {
         String query = "insert into account (balance, customer_id) values (?,?)";
-        System.out.println("Account ID: " + account.getCustId());
+        System.out.println("Customer ID: " + account.getCustId());
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         preparedStatement.setDouble(1, account.getBalance());
         preparedStatement.setInt(2, account.getCustId());
@@ -62,11 +77,10 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
-    public void personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException {
-
-
+    // It would be deposit or withdraw. If deposit == true, then it will be a deposit, else it will be a withdrawal
+    // Withdraw method first checks whether we have sufficient balance to do the transaction, if not possible, it will return false
+    public boolean personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException {
         String query = "update account set balance = ? WHERE (id = ?)";
-        //System.out.println("Account ID: " + actIdx);
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         if(deposit) {
             preparedStatement.setDouble(1, account.getBalance() + amount);
@@ -78,6 +92,7 @@ public class BankDaoImpl implements BankDao{
             } else{
                 System.out.println("Oops, something went wrong. please try again!");
             }
+            return true;
             //return -1;
         }
 
@@ -89,13 +104,16 @@ public class BankDaoImpl implements BankDao{
                 int count = preparedStatement.executeUpdate();
                 if(count > 0){
                     System.out.println("Updated successfully!");
+                    return true;
                 } else{
                     System.out.println("Oops, something went wrong. please try again!");
+                    return false;
                 }
                 //return amount;
             }
             else{
                 System.out.println("Not enough funds!");
+                return false;
                 //return -2;
             }
 
@@ -104,6 +122,7 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
+    // List of all verified accounts that a customer has
     public List<Account> allAccounts(int custId) throws SQLException {
         List<Account> accounts = new ArrayList<>();
         String query = "select * from account where customer_id = "+ custId + " and verified = true";
@@ -122,6 +141,7 @@ public class BankDaoImpl implements BankDao{
 
 
     @Override
+    // Employee can reject accounts through this
     public void deleteAccount(int actId) throws SQLException {
         String query = "delete from account where id = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -135,6 +155,7 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
+    // list of all the unverified accounts that the employee needs to approve or reject
     public List<Account> getUnverifiedAccounts() throws SQLException {
         List<Account> unverifiedAccounts = new ArrayList<>();
         String query = "select * from account where verified = "+false;
@@ -150,6 +171,7 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
+    // Employee can verify accounts through this
     public void verifyAccount(int actId) throws SQLException {
         String query = "update account set verified = true where id = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -163,12 +185,36 @@ public class BankDaoImpl implements BankDao{
     }
 
     @Override
+    // this method inserts deposits and withdrawals inside the transaction table
+    public void insertDepOrWit(int actId, double balance, boolean deposit) throws SQLException {
+        String type;
+        if (deposit)
+            type = "deposit";
+        else
+            type = "withdraw";
+        String query = "insert into transaction (act_id_from, balance, type) values (?,?,?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setInt(1, actId);
+        preparedStatement.setDouble(2, balance);
+        preparedStatement.setString(3, type);
+        int count = preparedStatement.executeUpdate();
+        if(count>0)
+            System.out.println("Withdraw inserted successfully");
+        else
+            System.out.println("Oops, transaction not inserted");
+
+
+    }
+
+    @Override
     public void insertTransaction(int actIdFrom, int actIdTo, double balance) throws SQLException {
-        String query = "insert into transaction (account_from, account_to, balance) values (?,?,?);";
+        // this method inserts the transfers inside the transaction table
+        String query = "insert into transaction (act_id_from, act_id_to, balance, type) values (?,?,?,?);";
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         preparedStatement.setInt(1,actIdFrom);
         preparedStatement.setInt(2, actIdTo);
         preparedStatement.setDouble(3, balance);
+        preparedStatement.setString(4, "transfer");
         int count = preparedStatement.executeUpdate();
         if(count>0)
             System.out.println("Transaction inserted");
@@ -179,12 +225,20 @@ public class BankDaoImpl implements BankDao{
 
     @Override
     public void showTransActions() throws SQLException {
+        // a method for the employee to view all transactions
         String query = "select * from transaction";
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(query);
         int i = 1;
         while(resultSet.next()){
-            System.out.println("Transaction "+i+": $"+resultSet.getDouble(3)+" transferred from account "+resultSet.getInt(1)+ " to account "+resultSet.getInt(2));
+            if(resultSet.getString(5).equals("deposit"))
+                System.out.println("Transaction " + i + ", account "+resultSet.getInt(2)+ " deposited $" + resultSet.getDouble(4) + " to itself." );
+            else if(resultSet.getString(5).equals("withdraw"))
+                System.out.println("Transaction " + i + ", account "+resultSet.getInt(2)+ " withdrew $" + resultSet.getDouble(4) + " from itself." );
+            else
+                System.out.println("Transaction "+i+": account "+resultSet.getInt(2)+ " transferred $"+resultSet.getDouble(4)+" to account "+resultSet.getInt(3));
+
+
             i++;
         }
 

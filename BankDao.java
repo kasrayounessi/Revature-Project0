@@ -8,9 +8,11 @@ public interface BankDao {
 
     void addCustomer(Customer customer) throws SQLException;
 
+    boolean isExistingCustomer(String username) throws SQLException;
+
     void addAccount(Account account) throws SQLException;
 
-    void personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException;
+    boolean personalActions(Account account, double amount, boolean deposit, int actIdx) throws SQLException;
 
     List<Account> allAccounts(int custId) throws SQLException;
 
@@ -19,6 +21,8 @@ public interface BankDao {
     List<Account> getUnverifiedAccounts() throws SQLException;
 
     void verifyAccount(int actId) throws SQLException;
+
+    void insertDepOrWit(int actId, double balance, boolean deposit) throws SQLException;
 
     void insertTransaction(int actIdFrom, int actIdTo, double balance) throws SQLException;
 
